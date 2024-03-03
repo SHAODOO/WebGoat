@@ -122,6 +122,7 @@ pipeline {
                             <div class="container">
                                 <p class="status">Build Status: ${currentBuild.currentResult}</p>
                                 <table>
+                                    <h3>Build Info</h3>
                                     <tr>
                                         <th>Job Name</th>
                                         <th>Build Number</th>
@@ -139,9 +140,7 @@ pipeline {
                                 </table>
                                 
                                 <table>
-                                    <tr>
-                                        <th colspan="5">Git Changeset</th>
-                                    </tr>
+                                    <h3>Git Changeset</h3>
                                     <tr>
                                         <th>Commit ID</th>
                                         <th>Author</th>
@@ -174,7 +173,6 @@ def getGitChangeSetTable() {
                 }.join(", ")
                 def author = entry.author.fullName
                 def message = entry.msg
-                // Construct GitHub commit URL
                 def commitUrl = "https://github.com/SHAODOO/WebGoat/commit/${id}"
                 "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
             }.join('\n')
