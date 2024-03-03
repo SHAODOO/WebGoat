@@ -174,7 +174,8 @@ def getGitChangeSetTable() {
                 }.join(", ")
                 def author = entry.author.fullName
                 def message = entry.msg
-                "<tr><td>${id}</td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
+                // Embed link to commit ID
+                "<tr><td><a href=\"${entry.commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
             }.join('\n')
         }.join('\n')
     } else {
@@ -190,7 +191,8 @@ def getGitChangeSetTable() {
                         }.join(", ")
                         def author = entry.author.fullName
                         def message = entry.msg
-                        "<tr><td>${id}</td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
+                        // Embed link to commit ID
+                        "<tr><td><a href=\"${entry.commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
                     }.join('\n')
                 }.join('\n')
                 buildsWithChangeset++
@@ -205,3 +207,4 @@ def getGitChangeSetTable() {
 
     return changelogTable
 }
+
