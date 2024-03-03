@@ -17,7 +17,8 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Build'
+                url = scm.getUserRemoteConfigs()[0].getUrl()
+                echo "${url}"
             }
         }
 
