@@ -121,8 +121,8 @@ pipeline {
                         <body>
                             <div class="container">
                                 <p class="status">Build Status: ${currentBuild.currentResult}</p>
+                                <h3>Build Info</h3>
                                 <table>
-                                    <h3>Build Info</h3>
                                     <tr>
                                         <th>Job Name</th>
                                         <th>Build Number</th>
@@ -139,8 +139,8 @@ pipeline {
                                     </tr>
                                 </table>
                                 
+                                <h3>Git Changeset</h3>
                                 <table>
-                                    <h3>Git Changeset</h3>
                                     <tr>
                                         <th>Commit ID</th>
                                         <th>Author</th>
