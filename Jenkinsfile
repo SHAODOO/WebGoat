@@ -174,8 +174,9 @@ def getGitChangeSetTable() {
                 }.join(", ")
                 def author = entry.author.fullName
                 def message = entry.msg
-                // Embed link to commit ID
-                "<tr><td><a href=\"${entry.commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
+                // Construct GitHub commit URL
+                def commitUrl = "https://github.com/<username>/<repository>/commit/${id}"
+                "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
             }.join('\n')
         }.join('\n')
     } else {
@@ -191,8 +192,9 @@ def getGitChangeSetTable() {
                         }.join(", ")
                         def author = entry.author.fullName
                         def message = entry.msg
-                        // Embed link to commit ID
-                        "<tr><td><a href=\"${entry.commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
+                        // Construct GitHub commit URL
+                        def commitUrl = "https://github.com/<username>/<repository>/commit/${id}"
+                        "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
                     }.join('\n')
                 }.join('\n')
                 buildsWithChangeset++
@@ -207,4 +209,5 @@ def getGitChangeSetTable() {
 
     return changelogTable
 }
+
 
