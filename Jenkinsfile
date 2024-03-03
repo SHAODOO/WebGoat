@@ -73,18 +73,16 @@ pipeline {
         stage('Collect ChangeLog') {
             steps {
                 script {
-                    lastSuccessfulBuild = currentBuild.previousSuccessfulBuild
-                    changelog = lastSuccessfulBuild?.changeSets.collect { cs ->
+                    def changelog = currentBuild.changeSets.collect { cs ->
                         cs.collect { entry ->
-                            def timestamp = entry.timestamp
-                            def formattedTimestamp = new Date(timestamp.toLong()).toString()
+                            def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
                             def id = entry.commitId
                             def files = entry.affectedFiles.collect { file ->
                                 file.path
                             }.join(", ")
                             def author = entry.author.fullName
                             def message = entry.msg
-                            echo "${formattedTimestamp} ${id} ${files} ${message} ${author}"
+                            "${formattedTimestamp} ${id} ${files} ${author} - ${message}"
                         }.join('\n')
                     }.join('\n')
                     echo "${changelog}"
