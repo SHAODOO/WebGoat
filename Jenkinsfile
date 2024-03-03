@@ -73,22 +73,58 @@ pipeline {
         stage('Collect ChangeLog') {
             steps {
                 script {
-                    def changelog = currentBuild.changeSets.collect { cs ->
-                        cs.collect { entry ->
-                            def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
-                            def id = entry.commitId
-                            def files = entry.affectedFiles.collect { file ->
-                                file.path
-                            }.join(", ")
-                            def author = entry.author.fullName
-                            def message = entry.msg
-                            "${formattedTimestamp} ${id} ${files} ${author} - ${message}"
+                    def changelog = ""
+                    def build = currentBuild
+
+                    // Check if the current build has changesets
+                    if (build.changeSets.size() > 0) {
+                        changelog += "Changeset from Current Build #${build.number}:\n"
+                        changelog += build.changeSets.collect { cs ->
+                            cs.collect { entry ->
+                                def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
+                                def id = entry.commitId
+                                def files = entry.affectedFiles.collect { file ->
+                                    file.path
+                                }.join(", ")
+                                def author = entry.author.fullName
+                                def message = entry.msg
+                                "${formattedTimestamp} ${id} ${files} ${author} - ${message}"
+                            }.join('\n')
                         }.join('\n')
-                    }.join('\n')
-                    echo "${changelog}"
+                    } else {
+                        // If current build has no changeset, look back 5 previous builds
+                        def buildsWithChangeset = 0
+                        while (buildsWithChangeset < 5 && build != null) {
+                            if (build.changeSets.size() > 0) {
+                                changelog += "Changeset from Build #${build.number}:\n"
+                                changelog += build.changeSets.collect { cs ->
+                                    cs.collect { entry ->
+                                        def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
+                                        def id = entry.commitId
+                                        def files = entry.affectedFiles.collect { file ->
+                                            file.path
+                                        }.join(", ")
+                                        def author = entry.author.fullName
+                                        def message = entry.msg
+                                        "${formattedTimestamp} ${id} ${files} ${author} - ${message}"
+                                    }.join('\n')
+                                }.join('\n')
+                                changelog += "\n\n"
+                                buildsWithChangeset++
+                            }
+                            build = build.previousBuild
+                        }
+                    }
+
+                    if (changelog.empty) {
+                        changelog = "No changeset available from the current or previous builds."
+                    }
+
+                    echo "Changelog:\n${changelog}"
                 }
             }
-        }
+}
+
         
     }
 
