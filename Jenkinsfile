@@ -77,15 +77,17 @@ pipeline {
                     changelog = lastSuccessfulBuild?.changeSets.collect { cs ->
                         cs.collect { entry ->
                             def timestamp = entry.timestamp
+                            def formattedTimestamp = new Date(timestamp.toLong()).toString()
                             def id = entry.commitId
                             def files = entry.affectedFiles.collect { file ->
                                 file.path
                             }.join(", ")
                             def author = entry.author.fullName
-                            "${timestamp} ${id} ${files} ${author}"
+                            def message = entry.msg
+                            echo "${formattedTimestamp} ${id} ${files} ${message} ${author}"
                         }.join('\n')
                     }.join('\n')
-                    echo "Changelog since last successful build:\n${changelog}"
+                    echo "${changelog}"
                 }
             }
         }
