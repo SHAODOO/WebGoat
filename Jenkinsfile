@@ -74,82 +74,71 @@ pipeline {
 
     post {
         always {
-            stage('Email Report') {
-                steps {
-                    script {
-                        emailext(
-                            to: 'ahdoo.ling010519@gmail.com',
-                            mimeType: 'text/html',
-                            subject: 'Build #${BUILD_NUMBER} - ${JOB_NAME}',
-                            body: """
-                                <html>
-                                    <head>
-                                        <style>
-                                            body {
-                                                font-family: Arial, sans-serif;
-                                                background-color: #f5f5f5;
-                                            }
-                                            .container {
-                                                background-color: #ffffff;
-                                                border-radius: 5px;
-                                                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-                                                margin: 20px;
-                                                padding: 20px;
-                                            }
-                                            table {
-                                                width: 100%;
-                                                border-collapse: collapse;
-                                                margin-top: 20px;
-                                            }
-                                            th, td {
-                                                border: 1px solid #ddd;
-                                                padding: 8px;
-                                                text-align: left;
-                                            }
-                                            th {
-                                                background-color: #f2f2f2;
-                                            }
-                                            .status {
-                                                font-size: 24px;
-                                                font-weight: bold;
-                                                color: green;
-                                            }
-                                        </style>
-                                    </head>
-                                    <body>
-                                        <div class="container">
-                                            <p class="status">Build Status: ${currentBuild.currentResult}</p>
-                                            <table>
-                                                <tr>
-                                                    <th>Job Name</th>
-                                                    <th>Build Number</th>
-                                                    <th>Build Node</th>
-                                                    <th>Build URL</th>
-                                                    <th>Build Duration</th>
-                                                </tr>
-                                                <tr>
-                                                    <td>${JOB_NAME}</td>
-                                                    <td>${BUILD_NUMBER}</td>
-                                                    <td>${NODE_NAME}</td>
-                                                    <td><a href="${BUILD_URL}">${BUILD_URL}</a></td>
-                                                    <td>${currentBuild.durationString}</td>
-                                                </tr>
-                                                <!-- Add more rows as needed -->
-                                            </table>
-                                        </div>
-                                    </body>
-                                </html>
-                            """
-                        )
-                    }
-                }
-            }
-
-            stage('Clean Workspace') {
-                steps {
-                    echo 'Clean Workspace'
-                }
-            }
+            emailext(
+                to: 'ahdoo.ling010519@gmail.com',
+                mimeType: 'text/html',
+                subject: 'Build #${BUILD_NUMBER} - ${JOB_NAME}',
+                body: """
+                    <html>
+                        <head>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    background-color: #f5f5f5;
+                                }
+                                .container {
+                                    background-color: #ffffff;
+                                    border-radius: 5px;
+                                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+                                    margin: 20px;
+                                    padding: 20px;
+                                }
+                                table {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                    margin-top: 20px;
+                                }
+                                th, td {
+                                    border: 1px solid #ddd;
+                                    padding: 8px;
+                                    text-align: left;
+                                }
+                                th {
+                                    background-color: #f2f2f2;
+                                }
+                                .status {
+                                    font-size: 24px;
+                                    font-weight: bold;
+                                    color: green;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <p class="status">Build Status: ${currentBuild.currentResult}</p>
+                                <table>
+                                    <tr>
+                                        <th>Job Name</th>
+                                        <th>Build Number</th>
+                                        <th>Build Node</th>
+                                        <th>Build URL</th>
+                                        <th>Build Duration</th>
+                                    </tr>
+                                    <tr>
+                                        <td>${JOB_NAME}</td>
+                                        <td>${BUILD_NUMBER}</td>
+                                        <td>${NODE_NAME}</td>
+                                        <td><a href="${BUILD_URL}">${BUILD_URL}</a></td>
+                                        <td>${currentBuild.durationString}</td>
+                                    </tr>
+                                    <!-- Add more rows as needed -->
+                                </table>
+                            </div>
+                        </body>
+                    </html>
+                """
+            )
+            echo "cleanWs()"
         }
     }
 }
