@@ -123,21 +123,24 @@ pipeline {
                                 <p class="status">Build Status: ${currentBuild.currentResult}</p>
                                 <h3>Build Info</h3>
                                 <table>
-                                    <tr>
-                                        <th>Job Name</th>
-                                        <th>Build Number</th>
-                                        <th>Build Node</th>
-                                        <th>Build URL</th>
-                                        <th>Build Duration</th>
-                                    </tr>
-                                    <tr>
-                                        <td>${JOB_NAME}</td>
-                                        <td>${BUILD_NUMBER}</td>
-                                        <td>${NODE_NAME}</td>
-                                        <td><a href="${BUILD_URL}">${BUILD_URL}</a></td>
-                                        <td>${currentBuild.durationString}</td>
-                                    </tr>
+                                <tr>
+                                    <th>Job Name</th>
+                                    <td>${JOB_NAME}</td>
+                                    <th>Build Number</th>
+                                    <td>${BUILD_NUMBER}</td>
+                                </tr>
+                                <tr>
+                                    <th>Build URL</th>
+                                    <td colspan="3"><a href="${BUILD_URL}">${BUILD_URL}</a></td>
+                                </tr>
+                                <tr>
+                                    <th>Build Node</th>
+                                    <td>${NODE_NAME}</td>
+                                    <th>Build Duration</th>
+                                    <td>${currentBuild.durationString}</td>
+                                </tr>
                                 </table>
+
                                 
                                 <h3>Git Changeset</h3>
                                 <table>
