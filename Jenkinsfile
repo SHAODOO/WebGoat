@@ -70,62 +70,11 @@ pipeline {
             }
         }
 
-        stage('Collect ChangeLog') {
+        stage('Clean Workspace') {
             steps {
-                script {
-                    def changelog = ""
-                    def build = currentBuild
-
-                    // Check if the current build has changesets
-                    if (build.changeSets.size() > 0) {
-                        changelog += "Changeset from Current Build #${build.number}:\n"
-                        changelog += build.changeSets.collect { cs ->
-                            cs.collect { entry ->
-                                def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
-                                def id = entry.commitId
-                                def files = entry.affectedFiles.collect { file ->
-                                    file.path
-                                }.join(", ")
-                                def author = entry.author.fullName
-                                def message = entry.msg
-                                "${formattedTimestamp} ${id} ${files} ${author} - ${message}"
-                            }.join('\n')
-                        }.join('\n')
-                    } else {
-                        // If current build has no changeset, look back 5 previous builds
-                        def buildsWithChangeset = 0
-                        while (buildsWithChangeset < 5 && build != null) {
-                            if (build.changeSets.size() > 0) {
-                                changelog += "Changeset from Build #${build.number}:\n"
-                                changelog += build.changeSets.collect { cs ->
-                                    cs.collect { entry ->
-                                        def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
-                                        def id = entry.commitId
-                                        def files = entry.affectedFiles.collect { file ->
-                                            file.path
-                                        }.join(", ")
-                                        def author = entry.author.fullName
-                                        def message = entry.msg
-                                        "${formattedTimestamp} ${id} ${files} ${author} - ${message}"
-                                    }.join('\n')
-                                }.join('\n')
-                                changelog += "\n\n"
-                                buildsWithChangeset++
-                            }
-                            build = build.previousBuild
-                        }
-                    }
-
-                    if (changelog.empty) {
-                        changelog = "No changeset available from the current or previous builds."
-                    }
-
-                    echo "Changelog:\n${changelog}"
-                }
+                echo "cleanWs()"
             }
-}
-
-        
+        }
     }
 
     post {
@@ -187,14 +136,72 @@ pipeline {
                                         <td><a href="${BUILD_URL}">${BUILD_URL}</a></td>
                                         <td>${currentBuild.durationString}</td>
                                     </tr>
-                                    <!-- Add more rows as needed -->
+                                </table>
+                                
+                                <table>
+                                    <tr>
+                                        <th colspan="5">Git Changeset</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Commit ID</th>
+                                        <th>Author</th>
+                                        <th>Message</th>
+                                        <th>Files</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                    ${getGitChangeSetTable()}
                                 </table>
                             </div>
                         </body>
                     </html>
                 """
             )
-            echo "cleanWs()"
         }
     }
+}
+
+def getGitChangeSetTable() {
+    def changelogTable = ""
+    def build = currentBuild
+
+    if (build.changeSets.size() > 0) {
+        changelogTable += build.changeSets.collect { cs ->
+            cs.collect { entry ->
+                def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
+                def id = entry.commitId
+                def files = entry.affectedFiles.collect { file ->
+                    file.path
+                }.join(", ")
+                def author = entry.author.fullName
+                def message = entry.msg
+                "<tr><td>${id}</td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
+            }.join('\n')
+        }.join('\n')
+    } else {
+        def buildsWithChangeset = 0
+        while (buildsWithChangeset < 5 && build != null) {
+            if (build.changeSets.size() > 0) {
+                changelogTable += build.changeSets.collect { cs ->
+                    cs.collect { entry ->
+                        def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
+                        def id = entry.commitId
+                        def files = entry.affectedFiles.collect { file ->
+                            file.path
+                        }.join(", ")
+                        def author = entry.author.fullName
+                        def message = entry.msg
+                        "<tr><td>${id}</td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
+                    }.join('\n')
+                }.join('\n')
+                buildsWithChangeset++
+            }
+            build = build.previousBuild
+        }
+    }
+
+    if (changelogTable.isEmpty()) {
+        changelogTable = "<tr><td colspan=\"5\">No changesets found</td></tr>"
+    }
+
+    return changelogTable
 }
