@@ -69,6 +69,30 @@ pipeline {
                 echo 'Deploy'
             }
         }
+
+        stage('Collect ChangeLog') {
+            steps {
+                script {
+                    if (currentBuild.result == 'SUCCESS') {
+                        lastSuccessfulBuild = currentBuild.previousSuccessfulBuild
+                        changelog = lastSuccessfulBuild?.changeSets.collect { cs ->
+                            cs.collect { entry ->
+                                def timestamp = entry.timestamp
+                                def id = entry.commitId
+                                def files = entry.affectedFiles.collect { file ->
+                                    file.path
+                                }.join(", ")
+                                def author = entry.author.fullName
+                                "${timestamp} ${id} ${files} ${author}"
+                            }.join('\n')
+                        }.join('\n')
+                    } else {
+                        changelog = "No successful build found to compare changelog."
+                    }
+                    echo "Changelog since last successful build:\n${changelog}"
+                }
+            }
+        }
         
     }
 
