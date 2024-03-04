@@ -116,6 +116,14 @@ pipeline {
                                     font-weight: bold;
                                     color: ${getStatusColor()};
                                 }
+                                .footer {
+                                    margin-top: 20px;
+                                    padding-top: 10px;
+                                    border-top: 1px solid #ddd;
+                                    text-align: center;
+                                    font-size: 12px;
+                                    color: #666;
+                                }
                             </style>
                         </head>
                         <body>
@@ -164,6 +172,15 @@ pipeline {
                                 <h3>Trivy</h3>
                                 <table>
                                 </table>
+                            </div>
+                            <div class="footer">
+                                <p>
+                                    This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you have received this email in error, please notify the system manager.
+                                    <br><br>
+                                    This message is sent from the AVAR project.
+                                    <br><br>
+                                    &copy; 2024 All rights reserved.
+                                </p>
                             </div>
                         </body>
                     </html>
