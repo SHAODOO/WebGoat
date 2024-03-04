@@ -126,10 +126,10 @@ pipeline {
                                 }
                                 .header {
                                     text-align: center;
-                                    margin-bottom: 10px;
+                                    margin-bottom: 5px;
                                 }
                                 .header img {
-                                    max-width: 45%;
+                                    max-width: 25%;
                                     height: auto;
                                 }
                             </style>
