@@ -120,7 +120,7 @@ pipeline {
                         </head>
                         <body>
                             <div class="container">
-                                Build Status: <p class="status">${currentBuild.currentResult}</p>
+                                <p class="status">Build Status: ${currentBuild.currentResult}</p>
                                 <h3>Build Info</h3>
                                 <table>
                                 <tr>
