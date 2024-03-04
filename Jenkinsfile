@@ -124,11 +124,24 @@ pipeline {
                                     font-size: 12px;
                                     color: #666;
                                 }
+                                .header {
+                                    text-align: center;
+                                    margin-bottom: 10px;
+                                }
+                                .header img {
+                                    max-width: 45%;
+                                    height: auto;
+                                }
                             </style>
                         </head>
                         <body>
                             <div class="container">
+                                <div class="header">
+                                    <img src="https://www.jenkins.io/images/logo-title-opengraph.png" alt="Jenkins Header">
+                                </div>
+
                                 <p class="status">Build Status: ${currentBuild.currentResult}</p>
+                                
                                 <h3>Build Info</h3>
                                 <table>
                                     <tr>
