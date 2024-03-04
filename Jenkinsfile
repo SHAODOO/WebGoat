@@ -126,9 +126,9 @@ pipeline {
                                 }
                                 .jenkins-icon {
                                     position: absolute;
-                                    top: 10px; /* Adjust as needed */
-                                    left: 10px; /* Adjust as needed */
-                                    width: 50px; /* Adjust as needed */
+                                    top: 10px; 
+                                    left: 10px; 
+                                    width: 150px; 
                                     height: auto;
                                 }
                             </style>
