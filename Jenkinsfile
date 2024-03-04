@@ -124,21 +124,18 @@ pipeline {
                                     font-size: 12px;
                                     color: #666;
                                 }
-                                .header {
-                                    text-align: center;
-                                    margin-bottom: 5px;
-                                }
-                                .header img {
-                                    max-width: 25%;
+                                .jenkins-icon {
+                                    position: absolute;
+                                    top: 10px; /* Adjust as needed */
+                                    left: 10px; /* Adjust as needed */
+                                    width: 50px; /* Adjust as needed */
                                     height: auto;
                                 }
                             </style>
                         </head>
                         <body>
                             <div class="container">
-                                <div class="header">
-                                    <img src="https://www.jenkins.io/images/logo-title-opengraph.png" alt="Jenkins Header">
-                                </div>
+                                <img src="https://www.jenkins.io/images/logo-title-opengraph.png" alt="Jenkins Icon" class="jenkins-icon">
 
                                 <p class="status">Build Status: ${currentBuild.currentResult}</p>
                                 
