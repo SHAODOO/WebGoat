@@ -123,25 +123,24 @@ pipeline {
                                 <p class="status">Build Status: ${currentBuild.currentResult}</p>
                                 <h3>Build Info</h3>
                                 <table>
-                                <tr>
-                                    <th>Job Name</th>
-                                    <td>${JOB_NAME}</td>
-                                    <th>Build Number</th>
-                                    <td>${BUILD_NUMBER}</td>
-                                </tr>
-                                <tr>
-                                    <th>Build URL</th>
-                                    <td colspan="3"><a href="${BUILD_URL}">${BUILD_URL}</a></td>
-                                </tr>
-                                <tr>
-                                    <th>Build Node</th>
-                                    <td>${NODE_NAME}</td>
-                                    <th>Build Duration</th>
-                                    <td>${currentBuild.durationString}</td>
-                                </tr>
+                                    <tr>
+                                        <th>Job Name</th>
+                                        <td>${JOB_NAME}</td>
+                                        <th>Build Number</th>
+                                        <td>${BUILD_NUMBER}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Build URL</th>
+                                        <td colspan="3"><a href="${BUILD_URL}">${BUILD_URL}</a></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Build Node</th>
+                                        <td>${NODE_NAME}</td>
+                                        <th>Build Duration</th>
+                                        <td>${currentBuild.durationString}</td>
+                                    </tr>
                                 </table>
-
-                                
+     
                                 <h3>Git Changeset</h3>
                                 <table>
                                     <tr>
@@ -152,6 +151,18 @@ pipeline {
                                         <th>Timestamp</th>
                                     </tr>
                                     ${getGitChangeSetTable()}
+                                </table>
+
+                                <h3>OWASP Dependency Check</h3>
+                                <table>
+                                </table>
+
+                                <h3>Snyk</h3>
+                                <table>
+                                </table>
+
+                                <h3>Trivy</h3>
+                                <table>
                                 </table>
                             </div>
                         </body>
