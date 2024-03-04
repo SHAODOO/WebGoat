@@ -114,7 +114,7 @@ pipeline {
                                 .status {
                                     font-size: 24px;
                                     font-weight: bold;
-                                    color: green;
+                                    color: ${getStatusColor()};
                                 }
                             </style>
                         </head>
@@ -211,4 +211,16 @@ def getGitChangeSetTable() {
     return changelogTable
 }
 
+def getStatusColor() {
+    switch (currentBuild.currentResult) {
+        case 'SUCCESS':
+            return 'green';
+        case 'FAILURE':
+            return 'red';
+        case 'ABORTED':
+            return 'grey';
+        default:
+            return 'black'; // default color
+    }
+}
 
