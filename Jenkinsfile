@@ -172,8 +172,8 @@ pipeline {
                                 <h3>Trivy</h3>
                                 <table>
                                 </table>
-                            </div>
-                            <div class="footer">
+
+                                <div class="footer">
                                 <p>
                                     This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you have received this email in error, please notify the system manager.
                                     <br><br>
@@ -181,6 +181,7 @@ pipeline {
                                     <br><br>
                                     &copy; 2024 All rights reserved.
                                 </p>
+                            </div>
                             </div>
                         </body>
                     </html>
