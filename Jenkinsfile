@@ -32,8 +32,19 @@ pipeline {
                 expression { params.OWASP_DEPENDENCY_CHECK == true }
             }
             steps {
+                // Run OWASP Dependency Check
                 dependencyCheck additionalArguments: '--scan \"${WORKSPACE}\" --prettyPrint --format JSON --format XML', odcInstallation: 'Dependency-Check-Installation'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+
+                // Extract vulnerability information from OWASP Dependency Check report
+                def reportFile = "${WORKSPACE}/dependency-check-report.json"
+                def vulnerabilities = extractOWASPVulnerabilities(reportFile)
+
+                // Generate HTML table for vulnerabilities
+                def vulnerabilitiesTable = generateHTMLTable(vulnerabilities)
+
+                // Store vulnerabilities as a build variable for later use
+                env.VULNERABILITIES_TABLE = vulnerabilitiesTable
             }
         }
 
@@ -79,124 +90,128 @@ pipeline {
 
     post {
         always {
-            emailext(
-                to: 'ahdoo.ling010519@gmail.com',
-                mimeType: 'text/html',
-                subject: 'Build #${BUILD_NUMBER} - ${JOB_NAME}',
-                body: """
-                    <html>
-                        <head>
-                            <style>
-                                body {
-                                    font-family: Arial, sans-serif;
-                                    background-color: #f5f5f5;
-                                }
-                                .container {
-                                    background-color: #ffffff;
-                                    border-radius: 5px;
-                                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
-                                    margin: 20px;
-                                    padding: 20px;
-                                }
-                                table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                    margin-top: 20px;
-                                }
-                                th, td {
-                                    border: 1px solid #ddd;
-                                    padding: 8px;
-                                    text-align: left;
-                                }
-                                th {
-                                    background-color: #f2f2f2;
-                                }
-                                .status {
-                                    font-size: 24px;
-                                    font-weight: bold;
-                                    color: ${getStatusColor()};
-                                }
-                                .footer {
-                                    margin-top: 20px;
-                                    padding-top: 10px;
-                                    border-top: 1px solid #ddd;
-                                    text-align: center;
-                                    font-size: 12px;
-                                    color: #666;
-                                }
-                                .jenkins-icon {
-                                    position: absolute;
-                                    top: 10px; 
-                                    left: 10px; 
-                                    width: 150px; 
-                                    height: auto;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="container">
-                                <img src="https://www.jenkins.io/images/logo-title-opengraph.png" alt="Jenkins Icon" class="jenkins-icon">
+            script {
+                // Send email notification with vulnerability information
+                emailext(
+                    to: 'ahdoo.ling010519@gmail.com',
+                    mimeType: 'text/html',
+                    subject: 'Build #${BUILD_NUMBER} - ${JOB_NAME}',
+                    body: """
+                        <html>
+                            <head>
+                                <style>
+                                    body {
+                                        font-family: Arial, sans-serif;
+                                        background-color: #f5f5f5;
+                                    }
+                                    .container {
+                                        background-color: #ffffff;
+                                        border-radius: 5px;
+                                        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+                                        margin: 20px;
+                                        padding: 20px;
+                                    }
+                                    table {
+                                        width: 100%;
+                                        border-collapse: collapse;
+                                        margin-top: 20px;
+                                    }
+                                    th, td {
+                                        border: 1px solid #ddd;
+                                        padding: 8px;
+                                        text-align: left;
+                                    }
+                                    th {
+                                        background-color: #f2f2f2;
+                                    }
+                                    .status {
+                                        font-size: 24px;
+                                        font-weight: bold;
+                                        color: ${getStatusColor()};
+                                    }
+                                    .footer {
+                                        margin-top: 20px;
+                                        padding-top: 10px;
+                                        border-top: 1px solid #ddd;
+                                        text-align: center;
+                                        font-size: 12px;
+                                        color: #666;
+                                    }
+                                    .jenkins-icon {
+                                        position: absolute;
+                                        top: 10px; 
+                                        left: 10px; 
+                                        width: 150px; 
+                                        height: auto;
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <img src="https://www.jenkins.io/images/logo-title-opengraph.png" alt="Jenkins Icon" class="jenkins-icon">
 
-                                <p class="status">Build Status: ${currentBuild.currentResult}</p>
-                                
-                                <h3>Build Info</h3>
-                                <table>
-                                    <tr>
-                                        <th>Job Name</th>
-                                        <td>${JOB_NAME}</td>
-                                        <th>Build Number</th>
-                                        <td>${BUILD_NUMBER}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Build URL</th>
-                                        <td colspan="3"><a href="${BUILD_URL}">${BUILD_URL}</a></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Build Node</th>
-                                        <td>${NODE_NAME}</td>
-                                        <th>Build Duration</th>
-                                        <td>${currentBuild.durationString}</td>
-                                    </tr>
-                                </table>
-     
-                                <h3>Git Changeset</h3>
-                                <table>
-                                    <tr>
-                                        <th>Commit ID</th>
-                                        <th>Author</th>
-                                        <th>Message</th>
-                                        <th>Files</th>
-                                        <th>Timestamp</th>
-                                    </tr>
-                                    ${getGitChangeSetTable()}
-                                </table>
+                                    <p class="status">Build Status: ${currentBuild.currentResult}</p>
+                                    
+                                    <h3>Build Info</h3>
+                                    <table>
+                                        <tr>
+                                            <th>Job Name</th>
+                                            <td>${JOB_NAME}</td>
+                                            <th>Build Number</th>
+                                            <td>${BUILD_NUMBER}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Build URL</th>
+                                            <td colspan="3"><a href="${BUILD_URL}">${BUILD_URL}</a></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Build Node</th>
+                                            <td>${NODE_NAME}</td>
+                                            <th>Build Duration</th>
+                                            <td>${currentBuild.durationString}</td>
+                                        </tr>
+                                    </table>
+        
+                                    <h3>Git Changeset</h3>
+                                    <table>
+                                        <tr>
+                                            <th>Commit ID</th>
+                                            <th>Author</th>
+                                            <th>Message</th>
+                                            <th>Files</th>
+                                            <th>Timestamp</th>
+                                        </tr>
+                                        ${getGitChangeSetTable()}
+                                    </table>
 
-                                <h3>OWASP Dependency Check</h3>
-                                <table>
-                                </table>
+                                    <h3>OWASP Dependency Check</h3>
+                                    <table>
+                                        ${env.VULNERABILITIES_TABLE ?: "<tr><td colspan=\"5\">No vulnerabilities found</td></tr>"}
+                                    </table>
 
-                                <h3>Snyk</h3>
-                                <table>
-                                </table>
+                                    <h3>Snyk</h3>
+                                    <table>
+                                    </table>
 
-                                <h3>Trivy</h3>
-                                <table>
-                                </table>
+                                    <h3>Trivy</h3>
+                                    <table>
+                                    </table>
 
-                                <div class="footer">
-                                <p>
-                                    This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you have received this email in error, please notify the system manager.
-                                    <br><br>
-                                    This message is sent from the AVAR project.
-                                    <br><br>
-                                    &copy; 2024 All rights reserved.
-                                </p>
-                            </div>
-                            </div>
-                        </body>
-                    </html>
-                """
-            )
+                                    <div class="footer">
+                                    <p>
+                                        This email and any files transmitted with it are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you have received this email in error, please notify the system manager.
+                                        <br><br>
+                                        This message is sent from the AVAR project.
+                                        <br><br>
+                                        &copy; 2024 All rights reserved.
+                                    </p>
+                                </div>
+                                </div>
+                            </body>
+                        </html>
+                    """
+                )
+            }
         }
     }
 }
@@ -215,7 +230,7 @@ def getGitChangeSetTable() {
                 }.join(", ")
                 def author = entry.author.fullName
                 def message = entry.msg
-                def commitUrl = "https://github.com/SHAODOO/WebGoat/commit/${id}"
+                def commitUrl = "https://github.com/SHAODOO/vulnerable-node/commit/${id}"
                 "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
             }.join('\n')
         }.join('\n')
@@ -233,7 +248,7 @@ def getGitChangeSetTable() {
                         def author = entry.author.fullName
                         def message = entry.msg
                         // Construct GitHub commit URL
-                        def commitUrl = "https://github.com/SHAODOO/WebGoat/commit/${id}"
+                        def commitUrl = "https://github.com/SHAODOO/vulnerable-node/commit/${id}"
                         "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
                     }.join('\n')
                 }.join('\n')
@@ -261,5 +276,47 @@ def getStatusColor() {
         default:
             return 'black'; // default color
     }
+}
+
+def extractOWASPVulnerabilities(reportFile) {
+    def vulnerabilities = [:]
+    node {
+        def jsonReport = readFile(file: reportFile)
+        def json = readJSON text: jsonReport
+
+        json.dependencies.findAll { dependency ->
+            dependency.vulnerabilities
+        }.each { dependency ->
+            def fileName = dependency.fileName
+            def filePath = dependency.filePath
+            def dependencyVulnerabilities = dependency.vulnerabilities
+
+            if (dependencyVulnerabilities) {
+                vulnerabilities[fileName] = dependencyVulnerabilities.collect { vuln ->
+                    return [name: vuln.name, severity: vuln.severity, description: vuln.description]
+                }
+            }
+        }
+    }
+
+    return vulnerabilities
+}
+
+def generateHTMLTableRows(vulnerabilities) {
+    def tableRows = ""
+    vulnerabilities.each { fileName, vulns ->
+        vulns.eachWithIndex { vuln, index ->
+            if (index > 0) {
+                tableRows += "<tr>"
+            }
+            tableRows += "<td>${fileName}</td>"
+            tableRows += "<td>${vuln.filePath}</td>"
+            tableRows += "<td>${vuln.name}</td>"
+            tableRows += "<td>${vuln.severity}</td>"
+            tableRows += "<td>${vuln.description}</td>"
+            tableRows += "</tr>"
+        }
+    }
+    return tableRows
 }
 
