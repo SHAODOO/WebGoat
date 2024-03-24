@@ -42,7 +42,7 @@ pipeline {
                     def vulnerabilities = extractOWASPVulnerabilities(reportFile)
 
                     // Generate HTML table for vulnerabilities
-                    def vulnerabilitiesTable = generateHTMLTable(vulnerabilities)
+                    def vulnerabilitiesTable = generateHTMLTableRows(vulnerabilities)
 
                     // Store vulnerabilities as a build variable for later use
                     env.VULNERABILITIES_TABLE = vulnerabilitiesTable
