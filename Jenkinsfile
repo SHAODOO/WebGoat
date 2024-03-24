@@ -36,15 +36,17 @@ pipeline {
                 dependencyCheck additionalArguments: '--scan \"${WORKSPACE}\" --prettyPrint --format JSON --format XML', odcInstallation: 'Dependency-Check-Installation'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
 
-                // Extract vulnerability information from OWASP Dependency Check report
-                def reportFile = "${WORKSPACE}/dependency-check-report.json"
-                def vulnerabilities = extractOWASPVulnerabilities(reportFile)
+                script {
+                    // Extract vulnerability information from OWASP Dependency Check report
+                    def reportFile = "${WORKSPACE}/dependency-check-report.json"
+                    def vulnerabilities = extractOWASPVulnerabilities(reportFile)
 
-                // Generate HTML table for vulnerabilities
-                def vulnerabilitiesTable = generateHTMLTable(vulnerabilities)
+                    // Generate HTML table for vulnerabilities
+                    def vulnerabilitiesTable = generateHTMLTable(vulnerabilities)
 
-                // Store vulnerabilities as a build variable for later use
-                env.VULNERABILITIES_TABLE = vulnerabilitiesTable
+                    // Store vulnerabilities as a build variable for later use
+                    env.VULNERABILITIES_TABLE = vulnerabilitiesTable
+                }
             }
         }
 
@@ -230,7 +232,7 @@ def getGitChangeSetTable() {
                 }.join(", ")
                 def author = entry.author.fullName
                 def message = entry.msg
-                def commitUrl = "https://github.com/SHAODOO/vulnerable-node/commit/${id}"
+                def commitUrl = "https://github.com/SHAODOO/WebGoat/commit/${id}"
                 "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
             }.join('\n')
         }.join('\n')
@@ -248,7 +250,7 @@ def getGitChangeSetTable() {
                         def author = entry.author.fullName
                         def message = entry.msg
                         // Construct GitHub commit URL
-                        def commitUrl = "https://github.com/SHAODOO/vulnerable-node/commit/${id}"
+                        def commitUrl = "https://github.com/SHAODOO/WebGoat/commit/${id}"
                         "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
                     }.join('\n')
                 }.join('\n')
