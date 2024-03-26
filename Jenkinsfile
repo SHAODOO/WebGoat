@@ -85,12 +85,15 @@ pipeline {
                     def trivyReport = "${WORKSPACE}/trivy-report.json"
                     def trivyVulnerabilities = extractTrivyVulnerabilities(trivyReport)
                     def trivyMisconfigurations = extractTrivyMisconfigurations(trivyReport)
+                    def trivySecrets = extractTrivySecrets(trivyReport)
 
                     def trivyVulnerabilitiesTableRows = generateTrivyVulnerabilitiesHTMLTableRows(trivyVulnerabilities)
                     def trivyMisconfigurationsTableRows = generateTrivyMisconfigurationsHTMLTableRows(trivyMisconfigurations)
+                    def trivySecretsTableRows = generateTrivySecretsHTMLTableRows(trivySecrets)
 
                     env.TRIVY_VULNERABILITIES_TABLE = trivyVulnerabilitiesTableRows
                     env.TRIVY_MISCONFIGURATIONS_TABLE = trivyMisconfigurationsTableRows
+                    env.TRIVY_SECRETS_TABLE = trivySecretsTableRows
                 }
             }
         }
@@ -246,6 +249,18 @@ pipeline {
                                         </tr>
                                         ${env.TRIVY_MISCONFIGURATIONS_TABLE ?: "<tr><td colspan=\"5\">No misconfigurations found</td></tr>"}
                                     </table>
+                                    <h3>Secrets</h3>
+                                    <table>
+                                        <tr>
+                                            <th>Target</th>
+                                            <th>Rule ID</th>
+                                            <th>Severity</th>
+                                            <th>Title</th>
+                                            <th>Line</th>
+                                            <th>Match</th>
+                                        </tr>
+                                        ${env.TRIVY_SECRETS_TABLE ?: "<tr><td colspan=\"6\">No secrets found</td></tr>"}
+                                    </table>
 
                                     <div class="footer">
                                     <p>
@@ -261,6 +276,7 @@ pipeline {
                         </html>
                     """
                 )
+                cleanWs()
             }
         }
     }
@@ -478,6 +494,44 @@ def generateTrivyMisconfigurationsHTMLTableRows(trivyMisconfigurations) {
         tableRows += "<td>${misconfiguration.Title}</td>"
         tableRows += "<td>${misconfiguration.Description}</td>"
         tableRows += "<td>${misconfiguration.Resolution}</td>"
+        tableRows += "</tr>"
+    }
+    return tableRows
+}
+
+def extractTrivySecrets(reportFile) {
+    def jsonReport = readFile(file: reportFile)
+    def json = readJSON text: jsonReport
+    def secrets = []
+
+    json.Results.each { result ->
+        if (result.Secrets) { 
+            result.Secrets.each { secret ->
+                def sec = [
+                    Target: result.Target,
+                    RuleID: secret.RuleID,
+                    Severity: secret.Severity,
+                    Title: secret.Title,
+                    Line: secret.StartLine,
+                    Match: secret.Match
+                ]
+                secrets.add(sec)
+            }
+        }
+    }
+    return secrets
+}
+
+def generateTrivySecretsHTMLTableRows(secrets) {
+    def tableRows = ""
+    secrets.each { secret ->
+        tableRows += "<tr>"
+        tableRows += "<td>${secret.Target}</td>"
+        tableRows += "<td>${secret.RuleID}</td>"
+        tableRows += "<td>${secret.Severity}</td>"
+        tableRows += "<td>${secret.Title}</td>"
+        tableRows += "<td>${secret.Line}</td>"
+        tableRows += "<td>${secret.Match}</td>"
         tableRows += "</tr>"
     }
     return tableRows

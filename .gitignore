@@ -57,3 +57,5 @@ TestClass.class
 /.gitconfig
 
 webgoat.gitconfig
+snyk-report.json
+trivy-report.json
