@@ -93,7 +93,7 @@ pipeline {
                     def trivyVulnerabilities = extractTrivyVulnerabilities(trivyReport)
 
                     // Generate HTML table for Trivy vulnerabilities
-                    def trivyVulnerabilitiesTableRows = generateTrivyHTMLTableRows(snykVulnerabilities)
+                    def trivyVulnerabilitiesTableRows = generateTrivyHTMLTableRows(trivyVulnerabilities)
 
                     // Store Trivy vulnerabilities as a build variable for later use
                     env.TRIVY_VULNERABILITIES_TABLE = trivyVulnerabilitiesTableRows
