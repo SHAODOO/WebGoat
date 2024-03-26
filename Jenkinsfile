@@ -38,14 +38,14 @@ pipeline {
 
                 script {
                     // Extract vulnerability information from OWASP Dependency Check report
-                    def reportFile = "${WORKSPACE}/dependency-check-report.json"
-                    def vulnerabilities = extractOWASPVulnerabilities(reportFile)
+                    def dependencyCheckReport = "${WORKSPACE}/dependency-check-report.json"
+                    def OWASPVulnerabilities = extractOWASPVulnerabilities(dependencyCheckReport)
 
                     // Generate HTML table for vulnerabilities
-                    def vulnerabilitiesTable = generateHTMLTableRows(vulnerabilities)
+                    def OWASPTableRows = generateOWASPHTMLTableRows(OWASPVulnerabilities)
 
                     // Store vulnerabilities as a build variable for later use
-                    env.VULNERABILITIES_TABLE = vulnerabilitiesTable
+                    env.OWASP_TABLE = OWASPTableRows
                 }
             }
         }
@@ -64,8 +64,8 @@ pipeline {
 
                 script {
                     // Extract Snyk vulnerabilities
-                    def reportFile = "${WORKSPACE}/snyk-report.json"
-                    def snykVulnerabilities = extractSnykVulnerabilities(reportFile)
+                    def snykReport = "${WORKSPACE}/snyk-report.json"
+                    def snykVulnerabilities = extractSnykVulnerabilities(snykReport)
 
                     // Generate HTML table for Snyk vulnerabilities
                     def snykTableRows = generateSnykHTMLTableRows(snykVulnerabilities)
@@ -86,18 +86,24 @@ pipeline {
                     trivy.exe
                     trivy fs --scanners vuln,secret,config,license ${WORKSPACE} -f json -o ${WORKSPACE}/trivy-report.json
                 """
+
+                script {
+                    // Extract Trivy vulnerabilities
+                    def trivyReport = "${WORKSPACE}/trivy-report.json"
+                    def trivyVulnerabilities = extractTrivyVulnerabilities(trivyReport)
+
+                    // Generate HTML table for Trivy vulnerabilities
+                    def trivyVulnerabilitiesTableRows = generateTrivyHTMLTableRows(snykVulnerabilities)
+
+                    // Store Trivy vulnerabilities as a build variable for later use
+                    env.TRIVY_VULNERABILITIES_TABLE = trivyVulnerabilitiesTableRows
+                }
             }
         }
 
         stage('Deploy') {
             steps {
                 echo 'Deploy'
-            }
-        }
-
-        stage('Clean Workspace') {
-            steps {
-                echo "cleanWs()"
             }
         }
     }
@@ -206,7 +212,7 @@ pipeline {
                                             <th>Severity</th>
                                             <th>Description</th>
                                         </tr>
-                                        ${env.VULNERABILITIES_TABLE ?: "<tr><td colspan=\"4\">No vulnerabilities found</td></tr>"}
+                                        ${env.OWASP_TABLE ?: "<tr><td colspan=\"4\">No vulnerabilities found</td></tr>"}
                                     </table>
 
                                     <h3>Snyk</h3>
@@ -222,7 +228,19 @@ pipeline {
                                     </table>
 
                                     <h3>Trivy</h3>
+                                    <h2>Vulnerabilities</h2>
                                     <table>
+                                        <tr>
+                                            <th>Target</th>
+                                            <th>Vulnerability ID</th>
+                                            <th>Severity</th>
+                                            <th>Title</th>
+                                            <th>Description</th>
+                                            <th>Package Name</th>
+                                            <th>Installed Version</th>
+                                            <th>Fixed Version</th>
+                                        </tr>
+                                        ${env.TRIVY_VULNERABILITIES_TABLE ?: "<tr><td colspan=\"8\">No vulnerabilities found</td></tr>"}
                                     </table>
 
                                     <div class="footer">
@@ -329,7 +347,7 @@ def extractOWASPVulnerabilities(reportFile) {
     return vulnerabilities
 }
 
-def generateHTMLTableRows(vulnerabilities) {
+def generateOWASPHTMLTableRows(vulnerabilities) {
     def tableRows = ""
     vulnerabilities.each { fileName, vulns ->        
         vulns.eachWithIndex { vuln, index ->
@@ -346,13 +364,12 @@ def generateHTMLTableRows(vulnerabilities) {
     return tableRows
 }
 
-// Function to extract Snyk vulnerabilities from the report file
 def extractSnykVulnerabilities(reportFile) {
     def vulnerabilities = []
-    def reportContent = readFile(file: reportFile)
-    def reportJson = readJSON text: reportContent
+    def jsonReport = readFile(file: reportFile)
+    def json = readJSON text: jsonReport
     
-    reportJson.runs.each { run ->
+    json.runs.each { run ->
         run.results.each { result ->
             def vulnerability = [:]
             vulnerability['ruleId'] = result.ruleId
@@ -370,7 +387,6 @@ def extractSnykVulnerabilities(reportFile) {
     return vulnerabilities
 }
 
-// Function to generate HTML table rows for Snyk vulnerabilities
 def generateSnykHTMLTableRows(snykVulnerabilities) {
     def tableRows = ""
     snykVulnerabilities.each { vulnerability ->
@@ -385,3 +401,44 @@ def generateSnykHTMLTableRows(snykVulnerabilities) {
     return tableRows
 }
 
+def extractTrivyVulnerabilities(reportFile) {
+    def jsonReport = readFile(file: reportFile)
+    def json = readJSON text: jsonReport
+    def vulnerabilities = []
+
+    json.Results.each { result ->
+        if (result.Vulnerabilities) { // Check if the 'Vulnerabilities' key exists
+            result.Vulnerabilities.each { vulnerability ->
+                def vuln = [
+                    Target: result.Target,
+                    VulnerabilityID: "<a href=\"${vulnerability.PrimaryURL}\">${vulnerability.VulnerabilityID}</a>",
+                    Severity: vulnerability.Severity,
+                    Title: vulnerability.Title,
+                    Description: vulnerability.Description,
+                    PkgName: vulnerability.PkgName,
+                    InstalledVersion: vulnerability.InstalledVersion,
+                    FixedVersion: vulnerability.FixedVersion
+                ]
+                vulnerabilities.add(vuln)
+            }
+        }
+    }
+    return vulnerabilities
+}
+
+def generateTrivyHTMLTableRows(trivyVulnerabilities) {
+    def tableRows = ""
+    trivyVulnerabilities.each { vulnerability ->
+        tableRows += "<tr>"
+        tableRows += "<td>${vulnerability.Target}</td>"
+        tableRows += "<td>${vulnerability.VulnerabilityID}</td>"
+        tableRows += "<td>${vulnerability.Severity}</td>"
+        tableRows += "<td>${vulnerability.Title}</td>"
+        tableRows += "<td>${vulnerability.Description}</td>"
+        tableRows += "<td>${vulnerability.PkgName}</td>"
+        tableRows += "<td>${vulnerability.InstalledVersion}</td>"
+        tableRows += "<td>${vulnerability.FixedVersion}</td>"
+        tableRows += "</tr>"
+    }
+    return tableRows
+}
