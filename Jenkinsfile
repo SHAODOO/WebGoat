@@ -147,7 +147,7 @@ pipeline {
                                     .status {
                                         font-size: 24px;
                                         font-weight: bold;
-                                        color: ${getStatusColor()};
+                                        color: ${getStatusColor(${currentBuild})};
                                     }
                                     .footer {
                                         margin-top: 20px;
@@ -201,7 +201,7 @@ pipeline {
                                             <th>Files</th>
                                             <th>Timestamp</th>
                                         </tr>
-                                        ${getGitChangeSetTable()}
+                                        ${getGitChangeSetTable("https://github.com/SHAODOO/WebGoat")}
                                     </table>
 
                                     <h2>OWASP Dependency Check</h2>
@@ -296,64 +296,3 @@ pipeline {
     }
 }
 
-def getGitChangeSetTable() {
-    def changelogTable = ""
-    def build = currentBuild
-
-    if (build.changeSets.size() > 0) {
-        changelogTable += build.changeSets.collect { cs ->
-            cs.collect { entry ->
-                def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
-                def id = entry.commitId
-                def files = entry.affectedFiles.collect { file ->
-                    file.path
-                }.join(", ")
-                def author = entry.author.fullName
-                def message = entry.msg
-                def commitUrl = "https://github.com/SHAODOO/WebGoat/commit/${id}"
-                "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
-            }.join('\n')
-        }.join('\n')
-    } else {
-        def buildsWithChangeset = 0
-        while (buildsWithChangeset < 5 && build != null) {
-            if (build.changeSets.size() > 0) {
-                changelogTable += build.changeSets.collect { cs ->
-                    cs.collect { entry ->
-                        def formattedTimestamp = new Date(entry.timestamp.toLong()).toString()
-                        def id = entry.commitId
-                        def files = entry.affectedFiles.collect { file ->
-                            file.path
-                        }.join(", ")
-                        def author = entry.author.fullName
-                        def message = entry.msg
-                        // Construct GitHub commit URL
-                        def commitUrl = "https://github.com/SHAODOO/WebGoat/commit/${id}"
-                        "<tr><td><a href=\"${commitUrl}\">${id}</a></td><td>${author}</td><td>${message}</td><td>${files}</td><td>${formattedTimestamp}</td></tr>"
-                    }.join('\n')
-                }.join('\n')
-                buildsWithChangeset++
-            }
-            build = build.previousBuild
-        }
-    }
-
-    if (changelogTable.isEmpty()) {
-        changelogTable = "<tr><td colspan=\"5\">No changesets found</td></tr>"
-    }
-
-    return changelogTable
-}
-
-def getStatusColor() {
-    switch (currentBuild.currentResult) {
-        case 'SUCCESS':
-            return 'green';
-        case 'FAILURE':
-            return 'red';
-        case 'ABORTED':
-            return 'grey';
-        default:
-            return 'black'; // default color
-    }
-}
