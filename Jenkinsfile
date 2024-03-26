@@ -8,7 +8,7 @@ pipeline {
     environment {
         SNYK = tool name: 'Snyk-Installation'
         SNYK_API_TOKEN = credentials('Snyk-API-Token')
-        GITHUB_URL = scm.getUserRemoteConfigs()[0].getUrl()
+        GITHUB_URL = scm.getUserRemoteConfigs()[0].getUrl().replaceAll(/\.git$/, '')
     }
 
     parameters {
@@ -20,7 +20,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo "${GITHUB_URL}"
+                echo 'Build'
             }
         }
 
@@ -199,7 +199,7 @@ pipeline {
                                             <th>Files</th>
                                             <th>Timestamp</th>
                                         </tr>
-                                        ${getGitChangeSetTable("https://github.com/SHAODOO/WebGoat")}
+                                        ${getGitChangeSetTable(GITHUB_URL)}
                                     </table>
 
                                     <h2>OWASP Dependency Check</h2>
