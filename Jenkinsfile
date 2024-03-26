@@ -144,11 +144,6 @@ pipeline {
                                     th {
                                         background-color: #f2f2f2;
                                     }
-                                    .status {
-                                        font-size: 24px;
-                                        font-weight: bold;
-                                        color: ${getStatusColor( ${currentBuild.currentResult} )};
-                                    }
                                     .footer {
                                         margin-top: 20px;
                                         padding-top: 10px;
@@ -170,7 +165,9 @@ pipeline {
                                 <div class="container">
                                     <img src="https://www.jenkins.io/images/logo-title-opengraph.png" alt="Jenkins Icon" class="jenkins-icon">
 
-                                    <p class="status">Build Status: ${currentBuild.currentResult}</p>
+                                    <p class="status" style="font-size: 24px; font-weight: bold; color: ${getStatusColor(currentBuild.currentResult)};">
+                                        Build Status: ${currentBuild.currentResult}
+                                    </p>
                                     
                                     <h2>Build Info</h2>
                                     <table>
