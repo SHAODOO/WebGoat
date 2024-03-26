@@ -20,7 +20,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo '${GITHUB_URL}'
+                echo ${GITHUB_URL}
             }
         }
 
