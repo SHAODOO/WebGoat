@@ -8,6 +8,7 @@ pipeline {
     environment {
         SNYK = tool name: 'Snyk-Installation'
         SNYK_API_TOKEN = credentials('Snyk-API-Token')
+        GITHUB_URL = scm.getUserRemoteConfigs()[0].getUrl()
     }
 
     parameters {
@@ -19,7 +20,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Build'
+                echo '${GITHUB_URL}'
             }
         }
 
