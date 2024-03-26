@@ -81,19 +81,21 @@ pipeline {
                 """
 
                 script {
-                    // Extract Trivy vulnerabilities
                     def trivyReport = "${WORKSPACE}/trivy-report.json"
                     def trivyVulnerabilities = extractTrivyVulnerabilities(trivyReport)
                     def trivyMisconfigurations = extractTrivyMisconfigurations(trivyReport)
                     def trivySecrets = extractTrivySecrets(trivyReport)
+                    def trivyLicenses = extractTrivyLicenses(trivyReport)
 
                     def trivyVulnerabilitiesTableRows = generateTrivyVulnerabilitiesHTMLTableRows(trivyVulnerabilities)
                     def trivyMisconfigurationsTableRows = generateTrivyMisconfigurationsHTMLTableRows(trivyMisconfigurations)
                     def trivySecretsTableRows = generateTrivySecretsHTMLTableRows(trivySecrets)
+                    def trivyLicensesTableRows = generateTrivyLicensesHTMLTableRows(trivyLicenses)
 
                     env.TRIVY_VULNERABILITIES_TABLE = trivyVulnerabilitiesTableRows
                     env.TRIVY_MISCONFIGURATIONS_TABLE = trivyMisconfigurationsTableRows
                     env.TRIVY_SECRETS_TABLE = trivySecretsTableRows
+                    env.TRIVY_LICENSES_TABLE = trivyLicensesTableRows
                 }
             }
         }
@@ -260,6 +262,16 @@ pipeline {
                                             <th>Match</th>
                                         </tr>
                                         ${env.TRIVY_SECRETS_TABLE ?: "<tr><td colspan=\"6\">No secrets found</td></tr>"}
+                                    </table>
+                                    <h3>Licenses</h3>
+                                    <table>
+                                        <tr>
+                                            <th>Package Name</th>
+                                            <th>Severity</th>
+                                            <th>Name</th>
+                                            <th>Confidence</th>
+                                        </tr>
+                                        ${env.TRIVY_LICENSES_TABLE ?: "<tr><td colspan=\"4\">No licenses found</td></tr>"}
                                     </table>
 
                                     <div class="footer">
@@ -532,6 +544,40 @@ def generateTrivySecretsHTMLTableRows(secrets) {
         tableRows += "<td>${secret.Title}</td>"
         tableRows += "<td>${secret.Line}</td>"
         tableRows += "<td>${secret.Match}</td>"
+        tableRows += "</tr>"
+    }
+    return tableRows
+}
+
+def extractTrivyLicenses(reportFile) {
+    def jsonReport = readFile(file: reportFile)
+    def json = readJSON text: jsonReport
+    def licenses = []
+
+    json.Results.each { result ->
+        if (result.Licenses) { // Check if the result is a license
+            result.Licenses.each { license ->
+                def lic = [
+                    PkgName: license.PkgName,
+                    Severity: license.Severity,
+                    Name: license.Name,
+                    Confidence: license.Confidence,
+                ]
+                licenses.add(lic)
+            }
+        }
+    }
+    return licenses
+}
+
+def generateTrivyLicensesHTMLTableRows(licenses) {
+    def tableRows = ""
+    licenses.each { license ->
+        tableRows += "<tr>"
+        tableRows += "<td>${license.PkgName}</td>"
+        tableRows += "<td>${license.Severity}</td>"
+        tableRows += "<td>${license.Name}</td>"
+        tableRows += "<td>${license.Confidence}</td>"
         tableRows += "</tr>"
     }
     return tableRows

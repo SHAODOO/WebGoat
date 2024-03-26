@@ -59,3 +59,4 @@ TestClass.class
 webgoat.gitconfig
 snyk-report.json
 trivy-report.json
+ori-trivy-report.json
