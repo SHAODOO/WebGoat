@@ -9,7 +9,7 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'OWASP_DEPENDENCY_CHECK', defaultValue: true, description: 'Enable OWASP Dependency Check')
+        booleanParam(name: 'OWASP_DEPENDENCY_CHECK', defaultValue: false, description: 'Enable OWASP Dependency Check')
         booleanParam(name: 'SNYK', defaultValue: false, description: 'Enable Snyk Scan')
         booleanParam(name: 'TRIVY', defaultValue: true, description: 'Enable Trivy Scan')
     }
@@ -32,19 +32,15 @@ pipeline {
                 expression { params.OWASP_DEPENDENCY_CHECK == true }
             }
             steps {
-                // Run OWASP Dependency Check
                 dependencyCheck additionalArguments: '--scan \"${WORKSPACE}\" --prettyPrint --format JSON --format XML', odcInstallation: 'Dependency-Check-Installation'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
 
                 script {
-                    // Extract vulnerability information from OWASP Dependency Check report
                     def dependencyCheckReport = "${WORKSPACE}/dependency-check-report.json"
                     def OWASPVulnerabilities = extractOWASPVulnerabilities(dependencyCheckReport)
 
-                    // Generate HTML table for vulnerabilities
                     def OWASPTableRows = generateOWASPHTMLTableRows(OWASPVulnerabilities)
 
-                    // Store vulnerabilities as a build variable for later use
                     env.OWASP_TABLE = OWASPTableRows
                 }
             }
@@ -63,14 +59,11 @@ pipeline {
                 }
 
                 script {
-                    // Extract Snyk vulnerabilities
                     def snykReport = "${WORKSPACE}/snyk-report.json"
                     def snykVulnerabilities = extractSnykVulnerabilities(snykReport)
 
-                    // Generate HTML table for Snyk vulnerabilities
                     def snykTableRows = generateSnykHTMLTableRows(snykVulnerabilities)
 
-                    // Store Snyk vulnerabilities as a build variable for later use
                     env.SNYK_TABLE = snykTableRows
                 }
             }
@@ -84,19 +77,20 @@ pipeline {
                 bat """
                     cd C:\\jenkins\\trivy_0.49.0_windows-64bit
                     trivy.exe
-                    trivy fs --scanners vuln,secret,config,license ${WORKSPACE} -f json -o ${WORKSPACE}/trivy-report.json
+                    trivy fs --scanners vuln,secret,misconfig,license ${WORKSPACE} -f json -o ${WORKSPACE}/trivy-report.json
                 """
 
                 script {
                     // Extract Trivy vulnerabilities
                     def trivyReport = "${WORKSPACE}/trivy-report.json"
                     def trivyVulnerabilities = extractTrivyVulnerabilities(trivyReport)
+                    def trivyMisconfigurations = extractTrivyMisconfigurations(trivyReport)
 
-                    // Generate HTML table for Trivy vulnerabilities
-                    def trivyVulnerabilitiesTableRows = generateTrivyHTMLTableRows(trivyVulnerabilities)
+                    def trivyVulnerabilitiesTableRows = generateTrivyVulnerabilitiesHTMLTableRows(trivyVulnerabilities)
+                    def trivyMisconfigurationsTableRows = generateTrivyMisconfigurationsHTMLTableRows(trivyMisconfigurations)
 
-                    // Store Trivy vulnerabilities as a build variable for later use
                     env.TRIVY_VULNERABILITIES_TABLE = trivyVulnerabilitiesTableRows
+                    env.TRIVY_MISCONFIGURATIONS_TABLE = trivyMisconfigurationsTableRows
                 }
             }
         }
@@ -111,7 +105,6 @@ pipeline {
     post {
         always {
             script {
-                // Send email notification with vulnerability information
                 emailext(
                     to: 'ahdoo.ling010519@gmail.com',
                     mimeType: 'text/html',
@@ -242,6 +235,17 @@ pipeline {
                                         </tr>
                                         ${env.TRIVY_VULNERABILITIES_TABLE ?: "<tr><td colspan=\"8\">No vulnerabilities found</td></tr>"}
                                     </table>
+                                    <h3>Misconfigurations</h3>  
+                                    <table>
+                                        <tr>
+                                            <th>Target</th>
+                                            <th>AVD ID</th>
+                                            <th>Title</th>
+                                            <th>Description</th>
+                                            <th>Resolution</th>
+                                        </tr>
+                                        ${env.TRIVY_MISCONFIGURATIONS_TABLE ?: "<tr><td colspan=\"5\">No misconfigurations found</td></tr>"}
+                                    </table>
 
                                     <div class="footer">
                                     <p>
@@ -347,9 +351,9 @@ def extractOWASPVulnerabilities(reportFile) {
     return vulnerabilities
 }
 
-def generateOWASPHTMLTableRows(vulnerabilities) {
+def generateOWASPHTMLTableRows(OWASPVulnerabilities) {
     def tableRows = ""
-    vulnerabilities.each { fileName, vulns ->        
+    OWASPVulnerabilities.each { fileName, vulns ->        
         vulns.eachWithIndex { vuln, index ->
             if (index > 0) {
                 tableRows += "<tr>"
@@ -407,7 +411,7 @@ def extractTrivyVulnerabilities(reportFile) {
     def vulnerabilities = []
 
     json.Results.each { result ->
-        if (result.Vulnerabilities) { // Check if the 'Vulnerabilities' key exists
+        if (result.Vulnerabilities) { 
             result.Vulnerabilities.each { vulnerability ->
                 def vuln = [
                     Target: result.Target,
@@ -426,7 +430,7 @@ def extractTrivyVulnerabilities(reportFile) {
     return vulnerabilities
 }
 
-def generateTrivyHTMLTableRows(trivyVulnerabilities) {
+def generateTrivyVulnerabilitiesHTMLTableRows(trivyVulnerabilities) {
     def tableRows = ""
     trivyVulnerabilities.each { vulnerability ->
         tableRows += "<tr>"
@@ -438,6 +442,42 @@ def generateTrivyHTMLTableRows(trivyVulnerabilities) {
         tableRows += "<td>${vulnerability.PkgName}</td>"
         tableRows += "<td>${vulnerability.InstalledVersion}</td>"
         tableRows += "<td>${vulnerability.FixedVersion}</td>"
+        tableRows += "</tr>"
+    }
+    return tableRows
+}
+
+def extractTrivyMisconfigurations(reportFile) {
+    def jsonReport = readFile(file: reportFile)
+    def json = readJSON text: jsonReport
+    def misconfigurations = []
+
+    json.Results.each { result ->
+        if (result.Misconfigurations) { 
+            result.Misconfigurations.each { misconfiguration ->
+                def misconf = [
+                    Target: result.Target,
+                    AVDID: "<a href=\"${misconfiguration.PrimaryURL}\">${misconfiguration.AVDID}</a>",
+                    Title: misconfiguration.Title,
+                    Description: misconfiguration.Description,
+                    Resolution: misconfiguration.Resolution,
+                ]
+                misconfigurations.add(misconf)
+            }
+        }
+    }
+    return misconfigurations
+}
+
+def generateTrivyMisconfigurationsHTMLTableRows(trivyMisconfigurations) {
+    def tableRows = ""
+    trivyMisconfigurations.each { misconfiguration ->
+        tableRows += "<tr>"
+        tableRows += "<td>${misconfiguration.Target}</td>"
+        tableRows += "<td>${misconfiguration.AVDID}</td>"
+        tableRows += "<td>${misconfiguration.Title}</td>"
+        tableRows += "<td>${misconfiguration.Description}</td>"
+        tableRows += "<td>${misconfiguration.Resolution}</td>"
         tableRows += "</tr>"
     }
     return tableRows
