@@ -9,9 +9,9 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'OWASP_DEPENDENCY_CHECK', defaultValue: false, description: 'Enable OWASP Dependency Check')
+        booleanParam(name: 'OWASP_DEPENDENCY_CHECK', defaultValue: true, description: 'Enable OWASP Dependency Check')
         booleanParam(name: 'SNYK', defaultValue: false, description: 'Enable Snyk Scan')
-        booleanParam(name: 'TRIVY', defaultValue: false, description: 'Enable Trivy Scan')
+        booleanParam(name: 'TRIVY', defaultValue: true, description: 'Enable Trivy Scan')
     }
     
     stages {
@@ -172,7 +172,7 @@ pipeline {
 
                                     <p class="status">Build Status: ${currentBuild.currentResult}</p>
                                     
-                                    <h3>Build Info</h3>
+                                    <h2>Build Info</h2>
                                     <table>
                                         <tr>
                                             <th>Job Name</th>
@@ -192,7 +192,7 @@ pipeline {
                                         </tr>
                                     </table>
         
-                                    <h3>Git Changeset</h3>
+                                    <h2>Git Changeset</h2>
                                     <table>
                                         <tr>
                                             <th>Commit ID</th>
@@ -204,7 +204,7 @@ pipeline {
                                         ${getGitChangeSetTable()}
                                     </table>
 
-                                    <h3>OWASP Dependency Check</h3>
+                                    <h2>OWASP Dependency Check</h2>
                                     <table>
                                         <tr>
                                             <th>File Name</th>
@@ -215,7 +215,7 @@ pipeline {
                                         ${env.OWASP_TABLE ?: "<tr><td colspan=\"4\">No vulnerabilities found</td></tr>"}
                                     </table>
 
-                                    <h3>Snyk</h3>
+                                    <h2>Snyk</h2>
                                     <table>
                                         <tr>
                                             <th>Rule ID</th>
@@ -227,8 +227,8 @@ pipeline {
                                         ${env.SNYK_TABLE ?: "<tr><td colspan=\"5\">No vulnerabilities found</td></tr>"}
                                     </table>
 
-                                    <h3>Trivy</h3>
-                                    <h2>Vulnerabilities</h2>
+                                    <h2>Trivy</h2>
+                                    <h3>Vulnerabilities</h3>
                                     <table>
                                         <tr>
                                             <th>Target</th>
