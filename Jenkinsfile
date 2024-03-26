@@ -13,7 +13,7 @@ pipeline {
     parameters {
         booleanParam(name: 'OWASP_DEPENDENCY_CHECK', defaultValue: false, description: 'Enable OWASP Dependency Check')
         booleanParam(name: 'SNYK', defaultValue: false, description: 'Enable Snyk Scan')
-        booleanParam(name: 'TRIVY', defaultValue: true, description: 'Enable Trivy Scan')
+        booleanParam(name: 'TRIVY', defaultValue: false, description: 'Enable Trivy Scan')
     }
     
     stages {
@@ -147,7 +147,7 @@ pipeline {
                                     .status {
                                         font-size: 24px;
                                         font-weight: bold;
-                                        color: ${getStatusColor(${currentBuild})};
+                                        color: ${getStatusColor( ${currentBuild.currentResult} )};
                                     }
                                     .footer {
                                         margin-top: 20px;
