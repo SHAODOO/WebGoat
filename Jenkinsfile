@@ -12,9 +12,9 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'OWASP_DEPENDENCY_CHECK', defaultValue: false, description: 'Enable OWASP Dependency Check')
-        booleanParam(name: 'SNYK', defaultValue: false, description: 'Enable Snyk Scan')
-        booleanParam(name: 'TRIVY', defaultValue: false, description: 'Enable Trivy Scan')
+        booleanParam(name: 'OWASP_DEPENDENCY_CHECK', defaultValue: true, description: 'Enable OWASP Dependency Check')
+        booleanParam(name: 'SNYK', defaultValue: true, description: 'Enable Snyk Scan')
+        booleanParam(name: 'TRIVY', defaultValue: true, description: 'Enable Trivy Scan')
     }
     
     stages {
