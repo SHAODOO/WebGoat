@@ -2,7 +2,7 @@
 
 pipeline {
     agent {
-        label 'windows'
+        label 'linux'
     }
 
     environment {
